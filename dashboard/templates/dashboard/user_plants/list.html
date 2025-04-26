@@ -1,0 +1,55 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}User Plants{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mt-4">User Plants</h2>
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Plant</th>
+                            <th>User</th>
+                            <th>Temperature</th>
+                            <th>Humidity</th>
+                            <th>Soil Moisture</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_plant in user_plants %}
+                        <tr>
+                            <td>{{ user_plant.plantName }}</td>
+                            <td>{{ user_plant.userEmail }}</td>
+                            <td>{{ user_plant.temperature }}°C</td>
+                            <td>{{ user_plant.humidity }}%</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: {% widthratio user_plant.soilMoisture 3500 100 %}%">
+                                        {{ user_plant.soilMoisture }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{% url 'user-plant-detail' user_plant.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-info-circle"></i> Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No user plants found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

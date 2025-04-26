@@ -1,0 +1,82 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ disease.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h4 class="m-0 font-weight-bold text-primary">
+                {{ disease.name }} ({{ disease.plant }})
+            </h4>
+            <span class="badge badge-{{ disease.type == 'Healthy'|yesno:'success,danger' }}">
+                {{ disease.type }}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Symptoms</h5>
+                    <div class="symptoms-box p-3 mb-4 border rounded">
+                        {{ disease.symptoms|linebreaks }}
+                    </div>
+                    
+                    <h5>Causes</h5>
+                    <p>{{ disease.cause }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Treatment</h5>
+                    <div class="treatment-box p-3 mb-4 border rounded bg-light">
+                        {{ disease.cure|linebreaks }}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Prevention Tips</h6>
+                        <ul>
+                            <li>Maintain proper plant hygiene</li>
+                            <li>Ensure adequate spacing between plants</li>
+                            <li>Monitor environmental conditions regularly</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h5>Affected Plants</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Plant ID</th>
+                                    <th>Owner</th>
+                                    <th>Status</th>
+                                    <th>First Detected</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plant in affected_plants %}
+                                <tr>
+                                    <td>{{ plant.id }}</td>
+                                    <td>{{ plant.userEmail }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ plant.status|yesno:'warning,danger' }}">
+                                            {{ plant.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ plant.detected }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No affected plants currently</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

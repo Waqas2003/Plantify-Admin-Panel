@@ -1,0 +1,16 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ community.name }}{% endblock %}
+
+{% block content %}
+<h2>{{ community.name }}</h2>
+<p>{{ community.description }}</p>
+<p>Created by: {{ community.createdBy }} on {{ community.createdAt }}</p>
+
+<h3>Members</h3>
+<ul class="list-group">
+    {% for member in members %}
+    <li class="list-group-item">{{ member.email }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

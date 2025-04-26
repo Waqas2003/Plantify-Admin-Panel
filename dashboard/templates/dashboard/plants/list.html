@@ -1,0 +1,36 @@
+<!-- dashboard/templates/dashboard/plants/list.html -->
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Plants Management{% endblock %}
+
+{% block content %}
+<h2>Plants Management</h2>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Min Temp</th>
+                <th>Max Temp</th>
+                <th>Min Humidity</th>
+                <th>Max Humidity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plant in plants %}
+            <tr>
+                <td>{{ plant.name }}</td>
+                <td>{{ plant.min_temp }}</td>
+                <td>{{ plant.max_temp }}</td>
+                <td>{{ plant.min_humid }}</td>
+                <td>{{ plant.max_humid }}</td>
+                <td>
+                    <a href="{% url 'plant-detail' plant.id %}" class="btn btn-sm btn-primary">Edit</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

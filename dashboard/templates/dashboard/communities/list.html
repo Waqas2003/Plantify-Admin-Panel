@@ -1,0 +1,52 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Communities{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mt-4">Communities</h2>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <a href="#" class="btn btn-success float-right">
+                <i class="fas fa-plus"></i> Create New
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Creator</th>
+                            <th>Members</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for community in communities %}
+                        <tr>
+                            <td>{{ community.name }}</td>
+                            <td>{{ community.description|truncatechars:50 }}</td>
+                            <td>{{ community.createdBy }}</td>
+                            <td>{{ community.members_count }}</td>
+                            <td>{{ community.createdAt|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'community-detail' community.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No communities found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
