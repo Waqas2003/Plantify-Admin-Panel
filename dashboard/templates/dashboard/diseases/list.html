@@ -6,12 +6,6 @@
 <div class="container-fluid">
     <h2 class="mt-4">Plant Diseases</h2>
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <div class="d-flex justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Disease Database</h6>
-                <input type="text" class="form-control w-25" placeholder="Search diseases...">
-            </div>
-        </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered">
@@ -19,7 +13,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Plant Type</th>
-                            <th>Disease Type</th>
+                            <th>Status</th>
                             <th>Severity</th>
                             <th>Actions</th>
                         </tr>
@@ -30,13 +24,13 @@
                             <td>{{ disease.name }}</td>
                             <td>{{ disease.plant }}</td>
                             <td>
-                                <span class="badge badge-{{ disease.type == 'Healthy'|yesno:'success,danger' }}">
+                                <span class="badge badge-{% if disease.type == 'Healthy' %}success{% else %}danger{% endif %}">
                                     {{ disease.type }}
                                 </span>
                             </td>
                             <td>
                                 <div class="progress">
-                                    <div class="progress-bar bg-{{ disease.severity|yesno:'warning,danger' }}" 
+                                    <div class="progress-bar bg-{% if disease.severity < 50 %}warning{% else %}danger{% endif %}" 
                                          style="width: {{ disease.severity }}%">
                                         {{ disease.severity }}%
                                     </div>
