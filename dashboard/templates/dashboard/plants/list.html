@@ -1,4 +1,68 @@
+
 <!-- dashboard/templates/dashboard/plants/list.html -->
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Plants Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Plants Management</h2>
+    <a href="{% url 'plant-create' %}" class="btn btn-success">+ Add New Plant</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Name</th>
+                <th>Min Temp</th>
+                <th>Max Temp</th>
+                <th>Min Humidity</th>
+                <th>Max Humidity</th>
+                <th>Min Light</th>
+                <th>Max Light</th>
+                <th>Min Soil</th>
+                <th>Max Soil</th>
+                <th>Norm Air</th>
+                <th>Smoke Air</th>
+                <th>Details</th>
+                <th style="width: 140px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plant in plants %}
+            <tr>
+                <td>{{ plant.name }}</td>
+                <td>{{ plant.min_temp }}</td>
+                <td>{{ plant.max_temp }}</td>
+                <td>{{ plant.min_humid }}</td>
+                <td>{{ plant.max_humid }}</td>
+                <td>{{ plant.min_light }}</td>
+                <td>{{ plant.max_light }}</td>
+                <td>{{ plant.min_soil }}</td>
+                <td>{{ plant.max_soil }}</td>
+                <td>{{ plant.norm_air }}</td>
+                <td>{{ plant.smoke_air }}</td>
+                <td>{{ plant.details }}</td>
+                <td class="text-center">
+                    <a href="{% url 'plant-update' plant.id %}" class="btn btn-sm btn-primary me-1">Edit</a>
+                    <a href="{% url 'plant-delete' plant.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="13" class="text-center text-muted">No plants found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+
+
+
+{% comment %} <!-- dashboard/templates/dashboard/plants/list.html -->
 {% extends 'dashboard/base.html' %}
 
 {% block title %}Plants Management{% endblock %}
@@ -14,23 +78,41 @@
                 <th>Max Temp</th>
                 <th>Min Humidity</th>
                 <th>Max Humidity</th>
+                <th>Min Light</th>
+                <th>Max Light</th>
+                <th>Min Soil</th>
+                <th>Max Soil</th>
+                <th>Norm Air</th>
+                <th>Smoke Air</th>
+                <th>Details</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for plant in plants %}
             <tr>
+                
                 <td>{{ plant.name }}</td>
                 <td>{{ plant.min_temp }}</td>
                 <td>{{ plant.max_temp }}</td>
                 <td>{{ plant.min_humid }}</td>
                 <td>{{ plant.max_humid }}</td>
+                <td>{{ plant.min_light }}</td>
+                <td>{{ plant.max_light }}</td>
+                <td>{{ plant.min_soil }}</td>
+                <td>{{ plant.max_soil }}</td>
+                <td>{{ plant.norm_air }}</td>
+                <td>{{ plant.smoke_air }}</td>
+                <td>{{ plant.details }}</td>
+
                 <td>
-                    <a href="{% url 'plant-detail' plant.id %}" class="btn btn-sm btn-primary">Edit</a>
-                </td>
+                    <a href="{% url 'plant-update' plant.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'plant-delete' plant.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>    
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-{% endblock %}
+{% endblock %} {% endcomment %}
+

@@ -7,8 +7,11 @@ urlpatterns = [
     
     # Plants
     path('plants/', views.plant_list, name='plant-list'),
-    path('plants/<str:plant_id>/', views.plant_detail, name='plant-detail'),
-    
+    # path('plants/<str:plant_id>/', views.plant_detail, name='plant-detail'),
+    path('plants/create/', views.plant_create, name='plant-create'),
+    path('plants/<str:plant_id>/edit/', views.plant_update, name='plant-update'),
+    path('plants/<str:plant_id>/delete/', views.plant_delete, name='plant-delete'),
+
     # Users
     path('users/', views.user_list, name='user-list'),
     path('users/<str:user_email>/', views.user_detail, name='user-detail'),

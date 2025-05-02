@@ -52,6 +52,12 @@ class FirebaseRepository:
     
     def update_plant(self, plant_id, data):
         self.db.collection('Plants').document(plant_id).update(data)
+        
+    def add_plant(self, data):
+        return self.db.collection('Plants').add(data)
+    
+    def delete_plant(self, plant_id):
+        self.db.collection('Plants').document(plant_id).delete()    
     
     # Users Collection
     def get_all_users(self):
