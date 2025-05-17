@@ -18,7 +18,7 @@ class FirebaseRepository:
             # Get private key properly from settings
             private_key = settings.FIREBASE_PRIVATE_KEY
             if isinstance(private_key, tuple):
-                private_key = private_key[0]  # Take first element if it's a tuple
+                private_key = private_key[0]  
             
             # Ensure proper newline formatting
             private_key = private_key.replace('\\n', '\n')
@@ -62,9 +62,23 @@ class FirebaseRepository:
     # Users Collection
     def get_all_users(self):
         return self.db.collection('Users').stream()
-    
+        
     def get_user(self, user_email):
         return self.db.collection('Users').document(user_email).get()
+    
+    def update_user(self,user_email,data):
+        self.db.collection('Users').document(user_email).update(data)
+        
+    def add_user(self, data):
+        return self.db.collection('Users').add(data)
+    
+    def delete_user(self, user_email):
+        self.db.collection('Users').document(user_email).delete()
+    
+    def block_user(self, user_email):
+        self.db.collection('Users').document(user_email).update({'status': 'blocked'})
+    
+    
     
     # Users_Plants Collection
     def get_all_user_plants(self):
@@ -73,6 +87,17 @@ class FirebaseRepository:
     def get_user_plants(self, user_email):
         return self.db.collection('Users_Plants').where('userEmail', '==', user_email).stream()
     
+    def add_user_plants(self, data):
+        user_email = data.get('userEmail') 
+        if user_email:
+            return self.db.collection('Users_Plants').document(user_email).set(data)
+
+    def update_user_plants(self,user_email,data):
+        self.db.collection('Users_Plants').document(user_email).update(data)
+    
+    def delete_user_plants(self, user_email):
+        self.db.collection('Users_Plants').document(user_email).delete()
+    
     # Communities Collection
     def get_all_communities(self):
         return self.db.collection('Communities').stream()
@@ -80,9 +105,34 @@ class FirebaseRepository:
     def get_community(self, community_id):
         return self.db.collection('Communities').document(community_id).get()
     
+    def update_community(self, community_id, data):
+        self.db.collection('Communities').document(community_id).update(data)
+        
+    def add_community(self, data):
+        return self.db.collection('Communities').add(data)
+    
+    def delete_community(self, community_id):
+        self.db.collection('Communities').document(community_id).delete()    
+
+    def block_community(self, community_id):
+        self.db.collection('Communities').document(community_id).update({'status': 'blocked'})
+
+    
     # Class_Labels Collection
     def get_all_diseases(self):
         return self.db.collection('Class_Labels').stream()
     
     def get_disease(self, disease_id):
         return self.db.collection('Class_Labels').document(disease_id).get()
+    
+    def update_disease(self, disease_id, data):
+        self.db.collection('Class_Labels').document(disease_id).update(data)
+        
+    def add_disease(self, data):
+        disease_name = data.get('disease')
+        return self.db.collection('Class_Labels').document(disease_name).set(data)
+    
+    def delete_disease(self, disease_id):
+        self.db.collection('Class_Labels').document(disease_id).delete()    
+
+    

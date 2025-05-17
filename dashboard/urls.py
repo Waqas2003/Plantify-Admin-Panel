@@ -14,17 +14,52 @@ urlpatterns = [
 
     # Users
     path('users/', views.user_list, name='user-list'),
-    path('users/<str:user_email>/', views.user_detail, name='user-detail'),
-    
+    # path('user/<str:user_email>/detail/', views.user_detail, name='user-detail'),
+    path('user/create/', views.user_create, name='user-create'),
+    path('user/<str:user_email>/update/', views.user_update, name='user-update'),
+    path('user/<str:user_email>/delete/', views.user_delete, name='user-delete'),
+    path('user/<str:user_email>/block/', views.user_block, name='user-block'),
+
     # User Plants
     path('user-plants/', views.user_plant_list, name='user-plant-list'),
-    path('user-plants/<str:plant_id>/', views.user_plant_detail, name='user-plant-detail'),
+    path('user-plants/create/', views.user_plant_create, name='user-plant-create'),
+    path('user-plants/update/<str:user_email>/', views.user_plant_update, name='user-plant-update'),
+    path('user-plants/delete/<str:user_email>/', views.user_plant_delete, name='user-plant-delete'),
+
     
     # Communities
+    # path('communities/', views.community_list, name='community-list'),
+    # path('communities/<str:community_id>/', views.community_detail, name='community-detail'),
+
+
+    # List and Create
     path('communities/', views.community_list, name='community-list'),
-    path('communities/<str:community_id>/', views.community_detail, name='community-detail'),
+    path('create/', views.community_create, name='community-create'),
+    
+    # Detail, Update, Delete
+    # path('<str:community_id>/', views.community_detail, name='community-detail'),
+    path('<str:community_id>/edit/', views.community_update, name='community-update'),
+    path('<str:community_id>/delete/', views.community_delete, name='community-delete'),
+    
+    # Member Management
+    # path('<str:community_id>/members/', views.community_members, name='community-members'),
+    # path('<str:community_id>/members/add/', views.add_member, name='add-member'),
+    # path('<str:community_id>/members/<str:user_id>/remove/', views.remove_member, name='remove-member'),
+    
+    # Banned Users
+    # path('<str:community_id>/banned-users/', views.banned_users_list, name='banned-users'),
+    # path('<str:community_id>/ban-user/<str:user_id>/', views.ban_user, name='ban-user'),
+    # path('<str:community_id>/unban-user/<str:user_id>/', views.unban_user, name='unban-user'),
+
+    
+    
     
     # Diseases
     path('diseases/', views.disease_list, name='disease-list'),
-    path('diseases/<str:disease_id>/', views.disease_detail, name='disease-detail'),
+    path('diseases/add/', views.disease_create, name='disease-create'),
+    path('diseases/<str:disease_id>/edit/', views.disease_update, name='disease-update'),
+    path('diseases/<str:disease_id>/delete/', views.disease_delete, name='disease-delete'),
+
+    # path('diseases/', views.disease_list, name='disease-list'),
+    # path('diseases/<str:disease_id>/', views.disease_detail, name='disease-detail'),
 ]

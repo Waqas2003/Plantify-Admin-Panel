@@ -1,4 +1,149 @@
 {% extends 'dashboard/base.html' %}
+
+{% block title %}User Plants{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>User Plants</h2>
+    <a href="{% url 'user-plant-create' %}" class="btn btn-success">+ Add New User Plant</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>User Email</th>
+                <th>Plant Name</th>
+                <th>Type</th>
+                <th>Temperature (°C)</th>
+                <th>Humidity (%)</th>
+                <th>Light</th>
+                <th>Soil</th>
+                <th>Air Quality</th>
+                <th style="width: 140px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in user_plants %}
+            <tr>
+                <td>{{ p.userEmail }}</td>
+                <td>{{ p.plantName }}</td>
+                <td>{{ p.plant_Type }}</td>
+                <td>{{ p.temperature }}</td>
+                <td>{{ p.humidity }}</td>
+                <td>{{ p.lightIntensity }}</td>
+                <td>{{ p.soilMoisture }}</td>
+                <td>{{ p.airQuality }}</td>
+                <td class="text-center">
+                    <a href="{% url 'user-plant-update' p.userEmail %}" class="btn btn-sm btn-primary me-1">Edit</a>
+                    <a href="{% url 'user-plant-delete' p.userEmail %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center text-muted">No user plants found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+
+{% comment %} {% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}User Plants Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>User Plants Management</h2>
+    <a href="{% url 'user-plant-create' %}" class="btn btn-success">+ Add New User Plant</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>User Email</th>
+                <th>Plant Name</th>
+                <th>Type</th>
+                <th>Temperature</th>
+                <th>Humidity</th>
+                <th>Light</th>
+                <th>Soil</th>
+                <th>Air Quality</th>
+                <th style="width: 140px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in user_plants %}
+            <tr>
+                <td>{{ p.userEmail }}</td>
+                <td>{{ p.plantName }}</td>
+                <td>{{ p.plant_Type }}</td>
+                <td>{{ p.temperature }}°C</td>
+                <td>{{ p.humidity }}%</td>
+                <td>{{ p.lightIntensity }}</td>
+                <td>{{ p.soilMoisture }}</td>
+                <td>{{ p.airQuality }}</td>
+                <td class="text-center">
+                    <a href="{% url 'user-plant-update' p.id %}" class="btn btn-sm btn-primary me-1">Edit</a>
+                    <a href="{% url 'user-plant-delete' p.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center text-muted">No user plants found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} {% endcomment %}
+
+
+{% comment %} {% extends 'dashboard/base.html' %}
+{% block content %}
+<h2>User Plants</h2>
+<a href="{% url 'user-plant-create' %}">Add New User Plant</a>
+<table border="1">
+    <thead>
+        <tr>
+            <th>User Email</th>
+            <th>Plant Name</th>
+            <th>Type</th>
+            <th>Temperature</th>
+            <th>Humidity</th>
+            <th>Light</th>
+            <th>Soil</th>
+            <th>Air Quality</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in user_plants %}
+        <tr>
+            <td>{{ p.userEmail }}</td>
+            <td>{{ p.plantName }}</td>
+            <td>{{ p.plant_Type }}</td>
+            <td>{{ p.temperature }}</td>
+            <td>{{ p.humidity }}</td>
+            <td>{{ p.lightIntensity }}</td>
+            <td>{{ p.soilMoisture }}</td>
+            <td>{{ p.airQuality }}</td>
+            <td>
+                <a href="{% url 'user-plant-update' p.id %}">Edit</a> |
+                <a href="{% url 'user-plant-delete' p.id %}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+
+{% comment %} {% extends 'dashboard/base.html' %}
 {% load static %}
 
 {% block title %}User Plants{% endblock %}
@@ -52,4 +197,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock %} {% endcomment %}

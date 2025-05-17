@@ -1,4 +1,42 @@
 {% extends 'dashboard/base.html' %}
+{% block content %}
+<h2>All Diseases</h2>
+<a href="{% url 'disease-create' %}" class="btn btn-success mb-3">Add New Disease</a>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Disease</th>
+            <th>Plant</th>
+            <th>Type</th>
+            <th>Cause</th>
+            <th>Class_id</th>
+            <th>Cure</th>
+            <th>Information</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in diseases %}
+        <tr>
+            <td>{{ d.disease }}</td>
+            <td>{{ d.plant }}</td>
+            <td>{{ d.type }}</td>
+            <td>{{ d.information }}</td>
+            <td>{{ d.cause }}</td>
+            <td>{{ d.cure }}</td>
+            <td>{{ d.class_id }}</td>
+            <td>
+                <a href="{% url 'disease-update' d.id %}" class="btn btn-primary btn-sm">Edit</a>
+                <a href="{% url 'disease-delete' d.id %}" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+
+{% comment %} {% extends 'dashboard/base.html' %}
 
 {% block title %}Plant Diseases{% endblock %}
 
@@ -53,4 +91,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock %} {% endcomment %}

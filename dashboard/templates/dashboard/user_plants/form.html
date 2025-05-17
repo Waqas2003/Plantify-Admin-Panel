@@ -1,0 +1,52 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{{ title }}</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="mb-3 col-md-6">
+                    <label class="form-label">User Email</label>
+                    <input type="email" name="userEmail" class="form-control" value="{{ user_plant.userEmail|default:'' }}" {% if title == 'Edit User Plant' %}readonly{% endif %} required>
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label class="form-label">Plant Name</label>
+                    <input type="text" name="plantName" class="form-control" value="{{ user_plant.plantName|default:'' }}" required>
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label class="form-label">Plant Type</label>
+                    <input type="text" name="plant_Type" class="form-control" value="{{ user_plant.plant_Type|default:'' }}" required>
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label class="form-label">Temperature (°C)</label>
+                    <input type="number" step="0.1" name="temperature" class="form-control" value="{{ user_plant.temperature|default:'' }}">
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label class="form-label">Humidity (%)</label>
+                    <input type="number" step="0.1" name="humidity" class="form-control" value="{{ user_plant.humidity|default:'' }}">
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label class="form-label">Light Intensity</label>
+                    <input type="text" name="lightIntensity" class="form-control" value="{{ user_plant.lightIntensity|default:'' }}">
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label class="form-label">Soil Moisture</label>
+                    <input type="text" name="soilMoisture" class="form-control" value="{{ user_plant.soilMoisture|default:'' }}">
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label class="form-label">Air Quality</label>
+                    <input type="text" name="airQuality" class="form-control" value="{{ user_plant.airQuality|default:'' }}">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success">{{ title }}</button>
+            <a href="{% url 'user-plant-list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

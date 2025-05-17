@@ -1,0 +1,107 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ title|default:"User Form" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ title|default:"User Form" }}</h2>
+
+    <form method="post" class="card p-4 shadow-sm">
+        {% csrf_token %}
+
+        <div class="row mb-3">
+            <div class="col"> 
+                <label class="form-label">Name</label>
+                <input type="text" name="name" class="form-control" value="{{ user.name|default_if_none:'' }}">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ user.email|default_if_none:'' }}">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select">
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="active" {% if user.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="blocked" {% if user.status == 'blocked' %}selected{% endif %}>Blocked</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'user-list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+{% comment %} {% extends 'dashboard/base.html' %}
+{% block title %}{{ title|default:"User Form" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ title|default:"User Form" }}</h2>
+
+    <form method="post" class="card p-4 shadow-sm">
+        {% csrf_token %}
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Name</label>
+                <input type="text" name="name" class="form-control" value="{{ user.name|default_if_none:'' }}">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ user.email|default_if_none:'' }}">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select">
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="active" {% if user.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="blocked" {% if user.status == 'blocked' %}selected{% endif %}>Blocked</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+
+        {% if user and user.id %}
+        <a href="{% url 'user-delete' user.email %}" class="btn btn-danger mt-2">Delete User</a>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+
+ {% endcomment %}

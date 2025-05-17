@@ -1,0 +1,142 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ title }}</h2>
+    <form method="post" class="card p-4 shadow-sm" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Community Name*</label>
+                <input type="text" name="name" class="form-control" 
+                       value="{{ community.name|default_if_none:'' }}" required>
+            </div>
+            <div class="col">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-control">
+                    <option value="active" {% if community.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if community.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="3">{{ community.description|default_if_none:'' }}</textarea>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Profile Image URL</label>
+                <input type="url" name="profileImageUrl" class="form-control" 
+                       value="{{ community.profileImageUrl|default_if_none:'' }}">
+            </div>
+            <div class="col">
+                <label class="form-label">Or Upload Image</label>
+                <input type="file" name="profileImage" class="form-control">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label class="form-label">Created By</label>
+                <input type="email" class="form-control" 
+                       value="{{ community.createdBy|default:request.user.email }}" readonly>
+                <input type="hidden" name="createdBy" value="{{ community.createdBy|default:request.user.email }}">
+            </div>
+            {% if is_edit %}
+            <div class="col">
+                <label class="form-label">Last Updated</label>
+                <input type="text" class="form-control" 
+                       value="{{ community.updatedAt|default:'Not updated yet' }}" readonly>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="init_members" id="init_members" checked>
+                <label class="form-check-label" for="init_members">
+                    Initialize with default members structure
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="init_banned" id="init_banned" checked>
+                <label class="form-check-label" for="init_banned">
+                    Initialize with banned users structure
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{% url 'community-list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+
+{% comment %} {% extends 'dashboard/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="name">Community Name*</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ community.name|default_if_none:'' }}" required>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="status">Status</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="active" {% if community.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if community.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3">{{ community.description|default_if_none:'' }}</textarea>
+                </div>
+
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="createdBy">Created By</label>
+                        <input type="email" class="form-control" id="createdBy" name="createdBy" 
+                               value="{{ community.createdBy|default:request.user.email }}" readonly>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> {% if is_edit %}Update{% else %}Create{% endif %} Community
+                </button>
+                <a href="{% url 'community-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Display file name in file input
+document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+    var fileName = e.target.files[0].name;
+    var nextSibling = e.target.nextElementSibling;
+    nextSibling.innerText = fileName;
+});
+</script>
+{% endblock %} {% endcomment %}

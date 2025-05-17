@@ -1,0 +1,37 @@
+{% extends 'dashboard/base.html' %}
+{% block content %}
+<h2>{{ title }}</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label>Disease Name</label>
+        <input type="text" name="disease" class="form-control" value="{{ disease.disease|default:'' }}">
+    </div>
+    <div class="form-group">
+        <label>Plant</label>
+        <input type="text" name="plant" class="form-control" value="{{ disease.plant|default:'' }}">
+    </div>
+    <div class="form-group">
+        <label>Type</label>
+        <input type="text" name="type" class="form-control" value="{{ disease.type|default:'' }}">
+    </div>
+    <div class="form-group">
+        <label>Cause</label>
+        <textarea name="cause" class="form-control">{{ disease.cause|default:'' }}</textarea>
+    </div>
+    <div class="form-group">
+        <label>Cure</label>
+        <textarea name="cure" class="form-control">{{ disease.cure|default:'' }}</textarea>
+    </div>
+    <div class="form-group">
+        <label>Information</label>
+        <textarea name="information" class="form-control">{{ disease.information|default:'' }}</textarea>
+    </div>
+    <div class="form-group">
+        <label>Class ID</label>
+        <input type="text" name="class_id" class="form-control" value="{{ disease.class_id|default:'' }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{% url 'disease-list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}
