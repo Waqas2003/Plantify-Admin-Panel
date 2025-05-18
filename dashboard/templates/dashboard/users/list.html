@@ -3,6 +3,82 @@
 {% block title %}User Management{% endblock %}
 
 {% block content %}
+<div class="container mt-4">
+    <h2>User Management</h2>
+
+    <!-- Add New User Button -->
+    <div class="mb-3">
+        <a href="{% url 'user-create' %}" class="btn btn-sm btn-success">Add New User</a>
+    </div>
+
+    <!-- Status Messages -->
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.role|title }}</td>
+                    <td>
+                        <span class="badge bg-{% if user.status == 'active' %}success{% else %}danger{% endif %}">
+                            {{ user.status|title }}
+                        </span>
+                    </td>
+                    <td>{{ user.createdAt|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <!-- Update User Button -->
+                            <a href="{% url 'user-update' user.email %}" class="btn btn-sm btn-warning">Edit</a>
+                            
+                            <!-- Conditional Block/Unblock Button -->
+                            {% if user.status == 'active' %}
+                                <a href="{% url 'user-block' user.email %}" class="btn btn-sm btn-danger">Block</a>
+                            {% else %}
+                                <a href="{% url 'user-unblock' user.email %}" class="btn btn-sm btn-success">Unblock</a>
+                            {% endif %}
+                            
+                            <!-- Delete Button -->
+                            <a href="{% url 'user-delete' user.email %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No users found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% comment %} {% extends 'dashboard/base.html' %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
 <h2>User Management</h2>
 
 <!-- Add New User Button -->
@@ -27,25 +103,13 @@
                 <td>{{ user.name }}</td>
                 <td>{{ user.createdAt }}</td>
                 <td>
-                    <!-- View User Button -->
-                    {% comment %} <a href="{% url 'user-detail' user.email %}" class="btn btn-sm btn-primary">View</a> {% endcomment %}
+
 
                     <!-- Update User Button -->
                     <a href="{% url 'user-update' user.email %}" class="btn btn-sm btn-warning">Update</a>
                     <a href="{% url 'user-delete' user.email %}" class="btn btn-sm btn-danger">Delete</a>
                     <a href="{% url 'user-block' user.email %}" class="btn btn-sm btn-secondary">Block</a>
 
-                    <!-- Delete User Form -->
-                    {% comment %} <form action="{% url 'user-delete' user.email %}" method="POST" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</button>
-                    </form> {% endcomment %}
-
-                    <!-- Block User Button -->
-                    {% comment %} <form action="{% url 'user-block' user.email %}" method="POST" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-secondary">Block</button>
-                    </form> {% endcomment %}
                 </td>
             </tr>
             {% endfor %}
@@ -53,36 +117,4 @@
     </table>
 </div>
 {% endblock %}
-
-
-{% comment %} {% extends 'dashboard/base.html' %}
-
-{% block title %}User Management{% endblock %}
-
-{% block content %}
-<h2>User Management</h2>
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Name</th>
-                <th>Joined</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.email }}</td>
-                <td>{{ user.name }}</td>
-                <td>{{ user.createdAt }}</td>
-                <td>
-                    <a href="{% url 'user-detail' user.email %}" class="btn btn-sm btn-primary">View</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endblock %}{%endcomment%}
+ {% endcomment %}

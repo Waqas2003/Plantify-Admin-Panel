@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from .firebase_service import FirebaseRepository
 from django.urls import reverse
 from datetime import datetime
+from django.contrib import messages
 
 def is_admin(user):
     return user.is_superuser
@@ -125,12 +126,95 @@ def plant_delete(request, plant_id):
 
 
 # -------------------- USERS --------------------
+# @login_required
+# @user_passes_test(is_admin)
+# def user_list(request):
+#     repo = FirebaseRepository()
+#     users = [{'id': u.id, **u.to_dict()} for u in repo.get_all_users()]
+#     return render(request, 'dashboard/users/list.html', {'users': users})
+
+# @login_required
+# @user_passes_test(is_admin)
+# def user_create(request):
+#     if request.method == 'POST':
+#         repo = FirebaseRepository()
+#         user_data = {
+#             'email': request.POST.get('email'),
+#             'name': request.POST.get('name'),
+#             'role': request.POST.get('role', 'user'),
+#             'status': request.POST.get('status', 'active'),
+#             'createdAt': datetime.now().isoformat()  # optional: store creation time
+#         }
+#         repo.add_user(user_data)
+#         return redirect('user-list')
+
+
+#     return render(request, 'dashboard/users/form.html')
+
+# @login_required
+# @user_passes_test(is_admin)
+# def user_update(request, user_email):
+#     repo = FirebaseRepository()
+#     user = repo.get_user(user_email)
+#     if not user.exists:
+#         return redirect('user-list')
+
+#     if request.method == 'POST':
+#         user_data = {
+#             'email': request.POST.get('email'),
+#             'name': request.POST.get('name'),
+#             'role': request.POST.get('role'),
+#             'status': request.POST.get('status'),
+#         }
+#         repo.update_user(user_email, user_data)  # Assuming a method to update user in Firebase
+#         return redirect('user-list')
+
+#     return render(request, 'dashboard/users/form.html', {
+#         'title': 'Edit User', 'user': {'id': user.id, **user.to_dict()}
+#     })
+    
+# @login_required
+# @user_passes_test(is_admin)
+# def user_delete(request, user_email):
+#     repo = FirebaseRepository()
+#     user = repo.get_user(user_email)
+#     if not user.exists:
+#         return redirect('user-list')
+
+#     if request.method == 'POST':
+#         repo.delete_user(user_email)
+#         return redirect('user-list')
+
+#     return render(request, 'dashboard/users/delete.html', {
+#         'user': {'id': user.id, **user.to_dict()}
+#     }
+#     # return render(request, 'dashboard/users/delete.html', {'user_id': user.id})
+#     )              
+
+# @login_required
+# @user_passes_test(is_admin)
+# def user_block(request, user_email):
+#     repo = FirebaseRepository()
+#     user = repo.get_user(user_email)
+#     if not user.exists:
+#         return redirect('user-list')
+
+#     if request.method == 'POST':
+#         repo.block_user(user_email)  # Assuming a method to block user in Firebase
+#         return redirect('user-list')
+
+#     return render(request, 'dashboard/users/block.html', {
+#         'user': {'id': user.id, **user.to_dict()}
+#     })
+
 @login_required
 @user_passes_test(is_admin)
 def user_list(request):
     repo = FirebaseRepository()
     users = [{'id': u.id, **u.to_dict()} for u in repo.get_all_users()]
     return render(request, 'dashboard/users/list.html', {'users': users})
+
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -141,13 +225,16 @@ def user_create(request):
             'email': request.POST.get('email'),
             'name': request.POST.get('name'),
             'role': request.POST.get('role', 'user'),
-            'status': request.POST.get('status', 'active'),
-            'createdAt': datetime.now().isoformat()  # optional: store creation time
+            'status': 'active',
+            'createdAt': datetime.now().isoformat()
         }
-        repo.add_user(user_data)
-        return redirect('user-list')
-
-
+        try:
+            repo.add_user(user_data)
+            messages.success(request, 'User created successfully')
+            return redirect('user-list')
+        except Exception as e:
+            messages.error(request, f'Error creating user: {str(e)}')
+    
     return render(request, 'dashboard/users/form.html')
 
 @login_required
@@ -155,80 +242,237 @@ def user_create(request):
 def user_update(request, user_email):
     repo = FirebaseRepository()
     user = repo.get_user(user_email)
+    
     if not user.exists:
+        messages.error(request, 'User not found')
         return redirect('user-list')
 
     if request.method == 'POST':
         user_data = {
-            'email': request.POST.get('email'),
             'name': request.POST.get('name'),
             'role': request.POST.get('role'),
-            'status': request.POST.get('status'),
         }
-        repo.update_user(user_email, user_data)  # Assuming a method to update user in Firebase
-        return redirect('user-list')
+        try:
+            repo.update_user(user_email, user_data)
+            messages.success(request, 'User updated successfully')
+            return redirect('user-list')
+        except Exception as e:
+            messages.error(request, f'Error updating user: {str(e)}')
 
     return render(request, 'dashboard/users/form.html', {
-        'title': 'Edit User', 'user': {'id': user.id, **user.to_dict()}
+        'title': 'Edit User', 
+        'user': {'id': user_email, **user.to_dict()}
     })
-    
+
 @login_required
 @user_passes_test(is_admin)
 def user_delete(request, user_email):
     repo = FirebaseRepository()
     user = repo.get_user(user_email)
+    
     if not user.exists:
+        messages.error(request, 'User not found')
         return redirect('user-list')
 
     if request.method == 'POST':
-        repo.delete_user(user_email)
-        return redirect('user-list')
+        try:
+            repo.delete_user(user_email)
+            messages.success(request, 'User deleted successfully')
+            return redirect('user-list')
+        except Exception as e:
+            messages.error(request, f'Error deleting user: {str(e)}')
 
     return render(request, 'dashboard/users/delete.html', {
-        'user': {'id': user.id, **user.to_dict()}
-    }
-    # return render(request, 'dashboard/users/delete.html', {'user_id': user.id})
-    )              
+        'user': {'id': user_email, **user.to_dict()}
+    })
 
 @login_required
 @user_passes_test(is_admin)
 def user_block(request, user_email):
     repo = FirebaseRepository()
     user = repo.get_user(user_email)
+    
     if not user.exists:
+        messages.error(request, 'User not found')
         return redirect('user-list')
+
+    user_data = {'id': user.id, **user.to_dict()}
 
     if request.method == 'POST':
-        repo.block_user(user_email)  # Assuming a method to block user in Firebase
-        return redirect('user-list')
+        try:
+            repo.block_user(user_email)
+            messages.success(request, f'User {user_email} has been blocked successfully')
+            return redirect('user-list')
+        except Exception as e:
+            messages.error(request, f'Error blocking user: {str(e)}')
+            return redirect('user-list')
 
-    return render(request, 'dashboard/users/block.html', {
-        'user': {'id': user.id, **user.to_dict()}
+    return render(request, 'dashboard/users/confirm_block.html', {
+        'user': user_data,
+        'action': 'block'
     })
 
+@login_required
+@user_passes_test(is_admin)
+def user_unblock(request, user_email):
+    repo = FirebaseRepository()
+    user = repo.get_user(user_email)
+    
+    if not user.exists:
+        messages.error(request, 'User not found')
+        return redirect('user-list')
+
+    user_data = {'id': user.id, **user.to_dict()}
+
+    if request.method == 'POST':
+        try:
+            repo.unblock_user(user_email)
+            messages.success(request, f'User {user_email} has been unblocked successfully')
+            return redirect('user-list')
+        except Exception as e:
+            messages.error(request, f'Error unblocking user: {str(e)}')
+            return redirect('user-list')
+
+    return render(request, 'dashboard/users/confirm_block.html', {
+        'user': user_data,
+        'action': 'unblock'
+    })
+
+
+# -------------------- COMMUNITIES --------------------
+
+@login_required
+@user_passes_test(is_admin)
+def community_create(request):
+    if request.method == 'POST':
+        repo = FirebaseRepository()
+        
+        # Get current user email from session or request
+        current_user_email = request.user.email if request.user.is_authenticated else 'anonymous'
+        
+        community_data = {
+            'name': request.POST.get('name'),
+            'description': request.POST.get('description', ''),
+            'profileImageUrl': request.POST.get('profileImageUrl', ''),
+            'createdAt': datetime.now().isoformat(),
+            'createdBy': current_user_email,
+            'status': request.POST.get('status', 'active'),
+        }
+        
+        # Add community document first
+        community_ref = repo.add_community(community_data)
+        
+        # Create empty subcollections for Members and BannedUsers
+        community_id = community_ref.id
+        repo.db.collection('Communities').document(community_id).collection('Members').document('placeholder').set({'exists': False})
+        repo.db.collection('Communities').document(community_id).collection('BannedUsers').document('placeholder').set({'exists': False})
+        
+        # Add creator as first member
+        repo.join_community(current_user_email, community_id)
+        
+        return redirect('community-list')
+
+    return render(request, 'dashboard/communities/form.html', {
+        'title': 'Create New Community',
+        'default_email': request.user.email if request.user.is_authenticated else ''
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def community_join(request, community_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    repo = FirebaseRepository()
+    user_email = request.user.email
+    
+    try:
+        # Check if community exists and is active
+        community = repo.get_community(community_id)
+        if not community.exists or community.to_dict().get('status') == 'blocked':
+            messages.error(request, "This community is not available or has been blocked")
+            return redirect('community-list')
+        
+        # Check if user is already a member
+        member_ref = repo.db.collection('Communities').document(community_id).collection('Members').document(user_email).get()
+        if member_ref.exists:
+            messages.warning(request, "You are already a member of this community")
+            return redirect('community-list')
+        
+        # Check if user is banned from this community
+        banned_ref = repo.db.collection('Communities').document(community_id).collection('BannedUsers').document(user_email).get()
+        if banned_ref.exists:
+            messages.error(request, "You are banned from joining this community")
+            return redirect('community-list')
+        
+        # Join the community
+        repo.join_community(user_email, community_id)
+        messages.success(request, "Successfully joined the community")
+        
+    except Exception as e:
+        messages.error(request, f"Error joining community: {str(e)}")
+    
+    return redirect('community-list')
+
+
+@login_required
+@user_passes_test(is_admin)
+def community_update(request, community_id):
+    repo = FirebaseRepository()
+    community = repo.get_community(community_id)
+    
+    if not community.exists:
+        return redirect('community-list')
+
+    if request.method == 'POST':
+        # Get current user email from session or request
+        current_user_email = request.user.email if request.user.is_authenticated else 'anonymous'
+        
+        community_data = {
+            'name': request.POST.get('name'),
+            'description': request.POST.get('description', ''),
+            'updatedAt': datetime.now().isoformat(),
+            'updatedBy': current_user_email,
+            'status': request.POST.get('status', 'active'),
+           
+        }
+        
+        repo.update_community(community_id, community_data)
+        return redirect('community-list')
+
+    # Convert community data to dictionary and prepare tags for form
+    community_data = community.to_dict()
+  
+    
+    return render(request, 'dashboard/communities/form.html', {
+        'title': 'Edit Community',
+        'community': community_data,
+        'is_edit': True
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def community_delete(request, community_id):
+    repo = FirebaseRepository()
+    community = repo.get_community(community_id)
+    
+    if not community.exists:
+        return redirect('community-list')
+
+    if request.method == 'POST':
+        # Optional: Delete associated image from storage
+        
+        repo.delete_community(community_id)
+        return redirect('community-list')
+
+    return render(request, 'dashboard/communities/confirm_delete.html', {
+        'community': community.to_dict()
+    })              
+
+
+
 # -------------------- USER PLANTS --------------------
-# @login_required
-# @user_passes_test(is_admin)
-# def user_plant_list(request):
-#     repo = FirebaseRepository()
-#     user_plants = [{'id': up.id, **up.to_dict()} for up in repo.get_all_user_plants()]
-#     return render(request, 'dashboard/user_plants/list.html', {'user_plants': user_plants})
-
-# @login_required
-# @user_passes_test(is_admin)
-# def user_plant_detail(request, plant_id):
-#     repo = FirebaseRepository()
-#     user_plant = repo.db.collection('Users_Plants').document(plant_id).get()
-#     if not user_plant.exists:
-#         return redirect('user-plant-list')
-
-#     if request.method == 'POST' and 'delete' in request.POST:
-#         repo.delete_user_plant(plant_id)
-#         return redirect('user-plant-list')
-
-#     return render(request, 'dashboard/user_plants/detail.html', {
-#         'user_plant': {'id': user_plant.id, **user_plant.to_dict()}
-#     })
 
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
@@ -316,160 +560,13 @@ def community_list(request):
     communities = [{'id': comm.id, **comm.to_dict()} for comm in repo.get_all_communities()]
     return render(request, 'dashboard/communities/list.html', {'communities': communities})
 
-# @login_required
-# @user_passes_test(is_admin)
-# def community_detail(request, community_id):
-#     repo = FirebaseRepository()
-#     community = repo.get_community(community_id)
-#     if not community.exists:
-#         return redirect('community-list')
-
-#     if request.method == 'POST' and 'delete' in request.POST:
-#         repo.delete_community(community_id)
-#         return redirect('community-list')
-
-#     members = list(repo.db.collection('Communities').document(community_id).collection('Members').stream())
-
-#     return render(request, 'dashboard/communities/detail.html', {
-#         'community': {'id': community.id, **community.to_dict()},
-#         'members': [m.to_dict() for m in members]
-#     })
-
-# @login_required
-# @user_passes_test(is_admin)
-# def community_create(request):
-#     if request.method == 'POST':
-#         repo = FirebaseRepository()
-#         user_data = {
-#             'email': request.POST.get('email'),
-#             'name': request.POST.get('name'),
-#             'role': request.POST.get('role', 'user'),
-#             'status': request.POST.get('status', 'active'),
-#             'createdAt': datetime.now().isoformat()  # optional: store creation time
-#         }
-#         repo.add_user(user_data)
-#         return redirect('user-list')
-
-
-#     return render(request, 'dashboard/users/form.html')
 
 from django.utils import timezone
 from datetime import datetime
 
-@login_required
-@user_passes_test(is_admin)
-def community_create(request):
-    if request.method == 'POST':
-        repo = FirebaseRepository()
-        
-        # Get current user email from session or request
-        current_user_email = request.user.email if request.user.is_authenticated else 'anonymous'
-        
-        community_data = {
-            'name': request.POST.get('name'),
-            'description': request.POST.get('description', ''),
-            'profileImageUrl': request.POST.get('profileImageUrl', ''),
-            'createdAt': datetime.now().isoformat(),
-            'createdBy': current_user_email,
-            'members': {  # Initial members structure
-                'placeholder': True  # As seen in your Firebase structure
-            },
-            'bannedUsers': {  # Initial banned users structure
-                'placeholder': True  # As seen in your Firebase structure
-            },
-            'status': request.POST.get('status', 'active'),
-           
-        }
-        
-        repo.add_community(community_data)
-        return redirect('community-list')
-
-    return render(request, 'dashboard/communities/form.html', {
-        'title': 'Create New Community',
-        'default_email': request.user.email if request.user.is_authenticated else ''
-    })
-
-@login_required
-@user_passes_test(is_admin)
-def community_update(request, community_id):
-    repo = FirebaseRepository()
-    community = repo.get_community(community_id)
-    
-    if not community.exists:
-        return redirect('community-list')
-
-    if request.method == 'POST':
-        # Get current user email from session or request
-        current_user_email = request.user.email if request.user.is_authenticated else 'anonymous'
-        
-        community_data = {
-            'name': request.POST.get('name'),
-            'description': request.POST.get('description', ''),
-            'updatedAt': datetime.now().isoformat(),
-            'updatedBy': current_user_email,
-            'status': request.POST.get('status', 'active'),
-           
-        }
-        
-        repo.update_community(community_id, community_data)
-        return redirect('community-list')
-
-    # Convert community data to dictionary and prepare tags for form
-    community_data = community.to_dict()
-  
-    
-    return render(request, 'dashboard/communities/form.html', {
-        'title': 'Edit Community',
-        'community': community_data,
-        'is_edit': True
-    })
-
-
-@login_required
-@user_passes_test(is_admin)
-def community_delete(request, community_id):
-    repo = FirebaseRepository()
-    community = repo.get_community(community_id)
-    
-    if not community.exists:
-        return redirect('community-list')
-
-    if request.method == 'POST':
-        # Optional: Delete associated image from storage
-        
-        repo.delete_community(community_id)
-        return redirect('community-list')
-    
-    return render(request, 'dashboard/communities/confirm_delete.html', {
-        'community': community.to_dict()
-    })              
-
-# @login_required
-# @user_passes_test(is_admin)
-# def community_block(request, user_email):
-#     repo = FirebaseRepository()
-#     user = repo.get_user(user_email)
-#     if not user.exists:
-#         return redirect('user-list')
-
-#     if request.method == 'POST':
-#         repo.block_user(user_email)  # Assuming a method to block user in Firebase
-#         return redirect('user-list')
-
-#     return render(request, 'dashboard/users/block.html', {
-#         'user': {'id': user.id, **user.to_dict()}
-#     })
-
 
 
 # -------------------- DISEASES --------------------
-# from django.shortcuts import render, redirect
-# from django.contrib.auth.decorators import login_required, user_passes_test
-# from .firebase_service import FirebaseRepository
-
-# def is_admin(user):
-#     return user.is_authenticated and user.is_staff
-
 @login_required
 @user_passes_test(is_admin)
 def disease_list(request):

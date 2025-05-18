@@ -1,0 +1,48 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Confirm User Action{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-{% if action == 'block' %}danger{% else %}success{% endif %} text-white">
+            <h4 class="mb-0">Confirm User {{ action|title }}</h4>
+        </div>
+        <div class="card-body">
+            <p>Are you sure you want to {{ action }} the following user?</p>
+            
+            <div class="user-details mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Email:</strong> {{ user.email }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Name:</strong> {{ user.name }}
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <strong>Current Status:</strong> 
+                        <span class="badge bg-{% if user.status == 'active' %}success{% else %}danger{% endif %}">
+                            {{ user.status|title }}
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Role:</strong> {{ user.role|title }}
+                    </div>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'user-list' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-{% if action == 'block' %}danger{% else %}success{% endif %}">
+                        Confirm {{ action|title }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

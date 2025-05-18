@@ -3,6 +3,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from django.conf import settings
 import os
+from datetime import datetime
+import re
 
 class FirebaseRepository:
     _instance = None
@@ -60,24 +62,130 @@ class FirebaseRepository:
         self.db.collection('Plants').document(plant_id).delete()    
     
     # Users Collection
+    
     def get_all_users(self):
         return self.db.collection('Users').stream()
         
     def get_user(self, user_email):
         return self.db.collection('Users').document(user_email).get()
     
-    def update_user(self,user_email,data):
+    def update_user(self, user_email, data):
         self.db.collection('Users').document(user_email).update(data)
         
     def add_user(self, data):
-        return self.db.collection('Users').add(data)
+        # Using email as document ID
+        user_ref = self.db.collection('Users').document(data['email'])
+        user_ref.set(data)
+        return user_ref
     
     def delete_user(self, user_email):
         self.db.collection('Users').document(user_email).delete()
     
+    def _escape_email(self, email):
+        """Escape email for Firestore field paths"""
+        # Replace special characters with Firestore-safe equivalents
+        return re.sub(r'[.@]', lambda x: {'@': '_at_', '.': '_dot_'}[x.group()], email)
+
     def block_user(self, user_email):
-        self.db.collection('Users').document(user_email).update({'status': 'blocked'})
+        try:
+            escaped_email = self._escape_email(user_email)
+            batch = self.db.batch()
+            user_ref = self.db.collection('Users').document(user_email)
+            
+            # 1. Remove from all communities
+            communities = self.db.collection('Communities')\
+                               .where(f'members.{escaped_email}', '==', True)\
+                               .stream()
+            
+            for community in communities:
+                comm_ref = self.db.collection('Communities').document(community.id)
+                batch.update(comm_ref, {
+                    f'members.{escaped_email}': firestore.DELETE_FIELD,
+                    f'bannedUsers.{escaped_email}': True
+                })
+            
+            # 2. Update user status
+            batch.update(user_ref, {
+                'status': 'blocked',
+                'lastBlockedAt': datetime.now().isoformat()
+            })
+            
+            batch.commit()
+            return True
+            
+        except Exception as e:
+            print(f"Error blocking user: {str(e)}")
+            raise e
+
+    def unblock_user(self, user_email):
+        self.db.collection('Users').document(user_email).update({
+            'status': 'active',
+            'lastUnblockedAt': datetime.now().isoformat()
+        })
+        
+    # ========== COMMUNITY METHODS ==========
+    def get_all_communities(self):
+        return self.db.collection('Communities').stream()
     
+    def get_community(self, community_id):
+        return self.db.collection('Communities').document(community_id).get()
+    
+    def update_community(self, community_id, data):
+        self.db.collection('Communities').document(community_id).update(data)
+        
+    def add_community(self, data):
+        return self.db.collection('Communities').add(data)
+    
+    def delete_community(self, community_id):
+        self.db.collection('Communities').document(community_id).delete()
+
+    def join_community(self, user_email, community_id):
+        # Check if user exists and is not blocked
+        user = self.get_user(user_email)
+        if not user.exists:
+            raise Exception("User does not exist")
+        if user.to_dict().get('status') == 'blocked':
+            raise Exception("User is blocked and cannot join communities")
+        
+        # Check if community exists and is not blocked
+        community = self.get_community(community_id)
+        if not community.exists:
+            raise Exception("Community does not exist")
+        if community.to_dict().get('status') == 'blocked':
+            raise Exception("Community is blocked and cannot be joined")
+        
+        # Check if user is banned from this community
+        banned_ref = self.db.collection('Communities').document(community_id).collection('BannedUsers').document(user_email).get()
+        if banned_ref.exists:
+            raise Exception("User is banned from this community")
+        
+        # Add to community members subcollection
+        self.db.collection('Communities').document(community_id).collection('Members').document(user_email).set({
+            'joinedAt': datetime.now().isoformat(),
+            'status': 'active'
+        })
+        
+        # Update user's joined communities
+        self.db.collection('Users').document(user_email).update({
+            f'joined_communities.{community_id}': True
+        })
+    
+    def get_community_members(self, community_id):
+        members = []
+        members_ref = self.db.collection('Communities').document(community_id).collection('Members').stream()
+        for member in members_ref:
+            if member.id != 'placeholder':
+                members.append(member.id)
+        return members
+    
+    def get_banned_users(self, community_id):
+        banned_users = []
+        banned_ref = self.db.collection('Communities').document(community_id).collection('BannedUsers').stream()
+        for user in banned_ref:
+            if user.id != 'placeholder':
+                banned_users.append(user.id)
+        return banned_users
+
     
     
     # Users_Plants Collection
@@ -97,27 +205,7 @@ class FirebaseRepository:
     
     def delete_user_plants(self, user_email):
         self.db.collection('Users_Plants').document(user_email).delete()
-    
-    # Communities Collection
-    def get_all_communities(self):
-        return self.db.collection('Communities').stream()
-    
-    def get_community(self, community_id):
-        return self.db.collection('Communities').document(community_id).get()
-    
-    def update_community(self, community_id, data):
-        self.db.collection('Communities').document(community_id).update(data)
         
-    def add_community(self, data):
-        return self.db.collection('Communities').add(data)
-    
-    def delete_community(self, community_id):
-        self.db.collection('Communities').document(community_id).delete()    
-
-    def block_community(self, community_id):
-        self.db.collection('Communities').document(community_id).update({'status': 'blocked'})
-
-    
     # Class_Labels Collection
     def get_all_diseases(self):
         return self.db.collection('Class_Labels').stream()

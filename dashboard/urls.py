@@ -14,11 +14,12 @@ urlpatterns = [
 
     # Users
     path('users/', views.user_list, name='user-list'),
-    # path('user/<str:user_email>/detail/', views.user_detail, name='user-detail'),
-    path('user/create/', views.user_create, name='user-create'),
-    path('user/<str:user_email>/update/', views.user_update, name='user-update'),
-    path('user/<str:user_email>/delete/', views.user_delete, name='user-delete'),
-    path('user/<str:user_email>/block/', views.user_block, name='user-block'),
+    path('users/create/', views.user_create, name='user-create'),
+    path('users/<str:user_email>/edit/', views.user_update, name='user-update'),
+    path('users/<str:user_email>/delete/', views.user_delete, name='user-delete'),
+    path('users/<str:user_email>/block/', views.user_block, name='user-block'),
+    path('users/<str:user_email>/unblock/', views.user_unblock, name='user-unblock'),
+
 
     # User Plants
     path('user-plants/', views.user_plant_list, name='user-plant-list'),
@@ -31,15 +32,11 @@ urlpatterns = [
     # path('communities/', views.community_list, name='community-list'),
     # path('communities/<str:community_id>/', views.community_detail, name='community-detail'),
 
-
-    # List and Create
+ # Community URLs
     path('communities/', views.community_list, name='community-list'),
-    path('create/', views.community_create, name='community-create'),
-    
-    # Detail, Update, Delete
-    # path('<str:community_id>/', views.community_detail, name='community-detail'),
-    path('<str:community_id>/edit/', views.community_update, name='community-update'),
-    path('<str:community_id>/delete/', views.community_delete, name='community-delete'),
+    path('communities/create/', views.community_create, name='community-create'),
+    path('communities/<str:community_id>/edit/', views.community_update, name='community-update'),
+    path('communities/<str:community_id>/delete/', views.community_delete, name='community-delete'),
     
     # Member Management
     # path('<str:community_id>/members/', views.community_members, name='community-members'),
