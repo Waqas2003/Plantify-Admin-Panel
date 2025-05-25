@@ -5,6 +5,7 @@ from .firebase_service import FirebaseRepository
 from django.urls import reverse
 from datetime import datetime
 from django.contrib import messages
+from firebase_admin import firestore
 
 def is_admin(user):
     return user.is_superuser
@@ -343,6 +344,15 @@ def user_unblock(request, user_email):
 
 @login_required
 @user_passes_test(is_admin)
+def community_list(request):
+    repo = FirebaseRepository()
+    communities = [{'id': comm.id, **comm.to_dict()} for comm in repo.get_all_communities()]
+    return render(request, 'dashboard/communities/list.html', {'communities': communities})
+
+
+
+@login_required
+@user_passes_test(is_admin)
 def community_create(request):
     if request.method == 'POST':
         repo = FirebaseRepository()
@@ -376,6 +386,34 @@ def community_create(request):
         'title': 'Create New Community',
         'default_email': request.user.email if request.user.is_authenticated else ''
     })
+
+@login_required
+@user_passes_test(is_admin)
+def block_community(request, community_id):
+    if request.method == 'POST':
+        repo = FirebaseRepository()
+        try:
+            repo.block_community(community_id, request.user.email)
+            messages.success(request, "Community has been blocked successfully")
+        except Exception as e:
+            messages.error(request, f"Error blocking community: {str(e)}")
+    return redirect('community-list')
+
+@login_required
+@user_passes_test(is_admin)
+def unblock_community(request, community_id):
+    if request.method == 'POST':
+        repo = FirebaseRepository()
+        try:
+            repo.db.collection('Communities').document(community_id).update({
+                'status': 'active',
+                'unblockedAt': datetime.now().isoformat(),
+                'unblockedBy': request.user.email
+            })
+            messages.success(request, "Community has been unblocked successfully")
+        except Exception as e:
+            messages.error(request, f"Error unblocking community: {str(e)}")
+    return redirect('community-list')
 
 @login_required
 @user_passes_test(is_admin)
@@ -470,6 +508,138 @@ def community_delete(request, community_id):
         'community': community.to_dict()
     })              
 
+@login_required
+@user_passes_test(is_admin)
+def community_detail(request, community_id):
+    repo = FirebaseRepository()
+    community = repo.get_community(community_id)
+    
+    if not community.exists:
+        return redirect('community-list')
+
+    community_data = community.to_dict()
+    community_data['id'] = community_id
+    
+    # Get all members
+    members = repo.get_community_members(community_id)
+    members_data = []
+    for member_email in members:
+        user = repo.get_user(member_email)
+        if user.exists:
+            user_data = user.to_dict()
+            user_data['email'] = member_email
+            members_data.append(user_data)
+    
+    # Get banned users
+    banned_users = repo.get_banned_users(community_id)
+    banned_users_data = []
+    for user_email in banned_users:
+        user = repo.get_user(user_email)
+        if user.exists:
+            user_data = user.to_dict()
+            user_data['email'] = user_email
+            banned_users_data.append(user_data)
+    
+    # Get all users for adding new members
+    all_users = []
+    users_ref = repo.db.collection('Users').stream()
+    for user in users_ref:
+        user_data = user.to_dict()
+        user_data['email'] = user.id
+        all_users.append(user_data)
+    
+    return render(request, 'dashboard/communities/detail.html', {
+        'community': community_data,
+        'members': members_data,
+        'banned_users': banned_users_data,
+        'all_users': all_users,
+        'title': f'Community: {community_data.get("name", "")}'
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def add_member(request, community_id):
+    if request.method == 'POST':
+        repo = FirebaseRepository()
+        user_email = request.POST.get('user_email')
+        
+        try:
+            repo.join_community(user_email, community_id)
+            messages.success(request, f"User {user_email} added to community successfully")
+        except Exception as e:
+            messages.error(request, f"Error adding member: {str(e)}")
+        
+        # Redirect back to the same form after submission (to add more users)
+        return redirect('add-member', community_id=community_id)
+
+    # If GET request, show the form
+    return render(request, 'dashboard/communities/addmembers.html', {'community_id': community_id})
+
+@login_required
+@user_passes_test(is_admin)
+def block_member(request, community_id):
+    if request.method == 'POST':
+        repo = FirebaseRepository()
+        user_email = request.POST.get('user_email')
+        
+        try:
+            # Remove from members
+            repo.db.collection('Communities').document(community_id).collection('Members').document(user_email).delete()
+            
+            # Add to banned users
+            repo.db.collection('Communities').document(community_id).collection('BannedUsers').document(user_email).set({
+                'bannedAt': datetime.now().isoformat(),
+                'bannedBy': request.user.email
+            })
+            
+            # Remove from user's joined communities
+            repo.db.collection('Users').document(user_email).update({
+                f'joined_communities.{community_id}': firestore.DELETE_FIELD
+            })
+            
+            messages.success(request, f"User {user_email} has been blocked from this community")
+        except Exception as e:
+            messages.error(request, f"Error blocking member: {str(e)}")
+        
+    return redirect('community-detail', community_id=community_id)
+
+@login_required
+@user_passes_test(is_admin)
+def unblock_user(request, community_id):
+    if request.method == 'POST':
+        repo = FirebaseRepository()
+        user_email = request.POST.get('user_email')
+        
+        try:
+            # Remove from banned users
+            repo.db.collection('Communities').document(community_id).collection('BannedUsers').document(user_email).delete()
+            messages.success(request, f"User {user_email} has been unblocked")
+        except Exception as e:
+            messages.error(request, f"Error unblocking user: {str(e)}")
+        
+    return redirect('community-detail', community_id=community_id)
+
+@login_required
+@user_passes_test(is_admin)
+def remove_member(request, community_id):
+    if request.method == 'POST':
+        repo = FirebaseRepository()
+        user_email = request.POST.get('user_email')
+        
+        try:
+            # Remove from members
+            repo.db.collection('Communities').document(community_id).collection('Members').document(user_email).delete()
+            
+            # Remove from user's joined communities
+            repo.db.collection('Users').document(user_email).update({
+                f'joined_communities.{community_id}': firestore.DELETE_FIELD
+            })
+            
+            messages.success(request, f"User {user_email} has been removed from this community")
+        except Exception as e:
+            messages.error(request, f"Error removing member: {str(e)}")
+        
+    return redirect('community-detail', community_id=community_id)
 
 
 # -------------------- USER PLANTS --------------------

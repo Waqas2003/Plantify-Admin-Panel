@@ -37,7 +37,13 @@ urlpatterns = [
     path('communities/create/', views.community_create, name='community-create'),
     path('communities/<str:community_id>/edit/', views.community_update, name='community-update'),
     path('communities/<str:community_id>/delete/', views.community_delete, name='community-delete'),
-    
+    path('communities/<str:community_id>/', views.community_detail, name='community-detail'),
+    path('communities/<str:community_id>/add-member/', views.add_member, name='add-member'),
+    path('communities/<str:community_id>/block-member/', views.block_member, name='block-member'),
+    path('communities/<str:community_id>/unblock-user/', views.unblock_user, name='unblock-user'),
+    path('communities/<str:community_id>/remove-member/', views.remove_member, name='remove-member'),
+    path('communities/<str:community_id>/unblock/', views.unblock_community, name='unblock-community'),
+    path('communities/<str:community_id>/block/', views.block_community, name='block-community'),
     # Member Management
     # path('<str:community_id>/members/', views.community_members, name='community-members'),
     # path('<str:community_id>/members/add/', views.add_member, name='add-member'),

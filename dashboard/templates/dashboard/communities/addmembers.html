@@ -1,0 +1,201 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="{% url 'community-detail' community.id %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Community
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="post" action="{% url 'add-member' community.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="user_email">User Email</label>
+                    <input type="email" class="form-control" id="user_email" name="user_email" required>
+                </div>
+                <a href="{% url 'add-member' community.id %}" class="btn btn-primary btn-sm">
+                     <i class="fas fa-user-plus"></i> Add Members
+                </a>
+            </form>
+
+            <hr>
+
+            <h5>Available Users</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in all_users %}
+                        <tr>
+                            <td>{{ user.displayName|default:"-" }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge badge-{% if user.status == 'active' %}success{% else %}warning{% endif %}">
+                                    {{ user.status|title }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">No available users to add</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% comment %} {% extends 'dashboard/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="{% url 'community-detail' community_id %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Community
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Current Members -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Current Members ({{ members|length }})</h6>
+                    <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#addMemberModal">
+                        <i class="fas fa-plus"></i> Add Member
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in members %}
+                                <tr>
+                                    <td>{{ member.displayName|default:member.email }}</td>
+                                    <td>{{ member.email }}</td>
+                                    <td>
+                                        <form method="post" action="{% url 'remove-member' community_id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_email" value="{{ member.email }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-user-minus"></i> Remove
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'block-member' community_id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_email" value="{{ member.email }}">
+                                            <button type="submit" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-ban"></i> Block
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No members found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Banned Members -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Banned Users ({{ banned_users|length }})</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in banned_users %}
+                                <tr>
+                                    <td>{{ user.displayName|default:user.email }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <form method="post" action="{% url 'unblock-user' community_id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_email" value="{{ user.email }}">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check-circle"></i> Unblock
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No banned users found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal fade" id="addMemberModal" tabindex="-1" role="dialog" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addMemberModalLabel">Add New Member</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'add-member' community_id %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="user_email">User Email</label>
+                        <input type="email" class="form-control" id="user_email" name="user_email" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} {% endcomment %}
