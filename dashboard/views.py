@@ -573,6 +573,7 @@ def add_member(request, community_id):
         return redirect('add-member', community_id=community_id)
 
     # If GET request, show the form
+    print("DEBUG - community_id:", community_id) 
     return render(request, 'dashboard/communities/addmembers.html', {'community_id': community_id})
 
 @login_required
