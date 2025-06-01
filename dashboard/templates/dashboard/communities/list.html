@@ -20,8 +20,8 @@
                             <th>Name</th>
                             <th>Description</th>
                             <th>Creator</th>
-                            <th>Members</th>
-                            <th>Status</th>
+                            {% comment %} <th>Members</th>
+                            <th>Status</th> {% endcomment %}
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
@@ -37,7 +37,7 @@
                             </td>
                             <td>{{ community.description|truncatechars:50|default:"-" }}</td>
                             <td>{{ community.createdBy|truncatechars:20 }}</td>
-                            <td class="text-center">
+                            {% comment %} <td class="text-center">
                                 <span class="badge badge-pill badge-primary">
                                     {{ community.members_count|default:"0" }}
                                 </span>
@@ -46,7 +46,7 @@
                                 <span class="badge badge-{% if community.status == 'active' %}success{% else %}warning{% endif %}">
                                     {{ community.status|title }}
                                 </span>
-                            </td>
+                            </td> {% endcomment %}
                             <td>{{ community.createdAt|date:"M d, Y" }}</td>
                             <td>
                                 <div class="btn-group" role="group">
@@ -56,6 +56,15 @@
                                     <a href="{% url 'community-update' community.id %}" class="btn btn-sm btn-info" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    {% if community.status == 'active' %}
+                                    <a href="{% url 'block-community' community.id %}" class="btn btn-sm btn-warning" title="Block">
+                                        <i class="fas fa-ban"></i>
+                                    </a>
+                                    {% else %}
+                                    <a href="{% url 'unblock-community' community.id %}" class="btn btn-sm btn-success" title="Unblock">
+                                        <i class="fas fa-check-circle"></i>
+                                    </a>
+                                    {% endif %}
                                     <a href="{% url 'community-delete' community.id %}" class="btn btn-sm btn-danger" title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </a>
@@ -199,6 +208,9 @@
                             <td>{{ community.createdAt|date:"M d, Y" }}</td>
                             <td>
                                 <div class="btn-group" role="group">
+                                    <a href="{% url 'community-detail' community.id %}" class="btn btn-sm btn-primary" title="Details">
+                                        <i class="fas fa-info-circle"></i>
+                                    </a>
                                     <a href="{% url 'community-update' community.id %}" class="btn btn-sm btn-info" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
@@ -291,5 +303,4 @@
 }
 </style>
 
-{% endblock %}
- {% endcomment %}
+{% endblock %} {% endcomment %}

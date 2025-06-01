@@ -174,9 +174,14 @@ class FirebaseRepository:
         })
         
         # Update user's joined communities
+        # self.db.collection('Users').document(user_email).update({
+        #     f'joined_communities.{community_id}': True
+        # })
         self.db.collection('Users').document(user_email).update({
-            f'joined_communities.{community_id}': True
+            'joined_communities': firestore.ArrayUnion([community_id])
         })
+
+        
     
     def get_community_members(self, community_id):
         members = []

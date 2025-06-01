@@ -354,8 +354,11 @@ def community_list(request):
 @login_required
 @user_passes_test(is_admin)
 def community_create(request):
+    
+    
+    repo = FirebaseRepository()
     if request.method == 'POST':
-        repo = FirebaseRepository()
+        
         
         # Get current user email from session or request
         current_user_email = request.user.email if request.user.is_authenticated else 'anonymous'
@@ -365,7 +368,7 @@ def community_create(request):
             'description': request.POST.get('description', ''),
             'profileImageUrl': request.POST.get('profileImageUrl', ''),
             'createdAt': datetime.now().isoformat(),
-            'createdBy': current_user_email,
+            'createdBy': "Plantify Admin",
             'status': request.POST.get('status', 'active'),
         }
         
@@ -378,7 +381,7 @@ def community_create(request):
         repo.db.collection('Communities').document(community_id).collection('BannedUsers').document('placeholder').set({'exists': False})
         
         # Add creator as first member
-        repo.join_community(current_user_email, community_id)
+        # repo.join_community(current_user_email, community_id)
         
         return redirect('community-list')
 
@@ -556,6 +559,26 @@ def community_detail(request, community_id):
         'title': f'Community: {community_data.get("name", "")}'
     })
 
+# @login_required
+# @user_passes_test(is_admin)
+# def add_member(request, community_id):
+#     if request.method == 'POST':
+#         repo = FirebaseRepository()
+#         user_email = request.POST.get('user_email')
+        
+#         try:
+#             repo.join_community(user_email, community_id)
+#             messages.success(request, f"User {user_email} added to community successfully")
+#         except Exception as e:
+#             messages.error(request, f"Error adding member: {str(e)}")
+        
+#         # Redirect back to the same form after submission (to add more users)
+#         return redirect('add-member', community_id=community_id)
+
+#     # If GET request, show the form
+#     print("DEBUG - community_id:", community_id) 
+#     return render(request, 'dashboard/communities/addmembers.html', {'community_id': community_id})
+
 @login_required
 @user_passes_test(is_admin)
 def add_member(request, community_id):
@@ -566,15 +589,33 @@ def add_member(request, community_id):
         try:
             repo.join_community(user_email, community_id)
             messages.success(request, f"User {user_email} added to community successfully")
+            return redirect('community-detail', community_id=community_id)  # Redirect to detail page after adding
         except Exception as e:
             messages.error(request, f"Error adding member: {str(e)}")
-        
-        # Redirect back to the same form after submission (to add more users)
-        return redirect('add-member', community_id=community_id)
+    
+    # For GET requests, show the form (modal in our case)
+    repo = FirebaseRepository()
+    community = repo.get_community(community_id)
+    if not community.exists:
+        return redirect('community-list')
 
-    # If GET request, show the form
-    print("DEBUG - community_id:", community_id) 
-    return render(request, 'dashboard/communities/addmembers.html', {'community_id': community_id})
+    # Get all needed data for the modal
+    members = repo.get_community_members(community_id)
+    banned_users = repo.get_banned_users(community_id)
+    all_users = []
+    users_ref = repo.db.collection('Users').stream()
+    for user in users_ref:
+        user_data = user.to_dict()
+        user_data['email'] = user.id
+        all_users.append(user_data)
+    
+    return render(request, 'dashboard/communities/detail.html', {
+        'community': {'id': community_id, **community.to_dict()},
+        'members': [{'email': m, **repo.get_user(m).to_dict()} for m in members if repo.get_user(m).exists],
+        'banned_users': [{'email': b, **repo.get_user(b).to_dict()} for b in banned_users if repo.get_user(b).exists],
+        'all_users': all_users,
+        'title': f'Community: {community.to_dict().get("name", "")}'
+    })
 
 @login_required
 @user_passes_test(is_admin)
@@ -641,6 +682,8 @@ def remove_member(request, community_id):
             messages.error(request, f"Error removing member: {str(e)}")
         
     return redirect('community-detail', community_id=community_id)
+
+
 
 
 # -------------------- USER PLANTS --------------------

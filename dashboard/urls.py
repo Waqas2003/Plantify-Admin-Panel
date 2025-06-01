@@ -1,6 +1,7 @@
 # dashboard/urls.py
-from django.urls import path
+from django.urls import path, include
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -65,4 +66,8 @@ urlpatterns = [
 
     # path('diseases/', views.disease_list, name='disease-list'),
     # path('diseases/<str:disease_id>/', views.disease_detail, name='disease-detail'),
+
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('login/', auth_views.LoginView.as_view(template_name='admin/login.html'), name='login'),
 ]
