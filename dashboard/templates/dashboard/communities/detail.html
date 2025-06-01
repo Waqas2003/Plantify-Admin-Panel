@@ -63,21 +63,16 @@
                     </div>
                     <div class="row mt-3">
                         <div class="col-12 text-center">
-                            {% if community.status == 'active' %}
-                            <form method="post" action="{% url 'block-community' community.id %}" class="d-inline">
+                            <form method="post" action="{% if community.status == 'active' %}{% url 'block-community' community.id %}{% else %}{% url 'unblock-community' community.id %}{% endif %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-warning">
-                                    <i class="fas fa-ban"></i> Block Community
+                                <button type="submit" class="btn btn-sm {% if community.status == 'active' %}btn-warning{% else %}btn-success{% endif %}">
+                                    {% if community.status == 'active' %}
+                                        <i class="fas fa-ban"></i> Block Community
+                                    {% else %}
+                                        <i class="fas fa-check-circle"></i> Unblock Community
+                                    {% endif %}
                                 </button>
                             </form>
-                            {% else %}
-                            <form method="post" action="{% url 'unblock-community' community.id %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-success">
-                                    <i class="fas fa-check-circle"></i> Unblock Community
-                                </button>
-                            </form>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -115,6 +110,7 @@
                                         </span>
                                     </td>
                                     <td>
+                                        {% if member.status == 'active' %}
                                         <form method="post" action="{% url 'block-member' community.id %}" class="d-inline">
                                             {% csrf_token %}
                                             <input type="hidden" name="user_email" value="{{ member.email }}">
@@ -122,6 +118,15 @@
                                                 <i class="fas fa-ban"></i> Block
                                             </button>
                                         </form>
+                                        {% else %}
+                                        <form method="post" action="{% url 'unblock-user' community.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_email" value="{{ member.email }}">
+                                            <button type="submit" class="btn btn-sm btn-success" title="Unblock User">
+                                                <i class="fas fa-check-circle"></i> Unblock
+                                            </button>
+                                        </form>
+                                        {% endif %}
                                         <form method="post" action="{% url 'remove-member' community.id %}" class="d-inline">
                                             {% csrf_token %}
                                             <input type="hidden" name="user_email" value="{{ member.email }}">
@@ -191,40 +196,6 @@
         </div>
     </div>
 </div>
-
-<!-- Add Member Modal -->
-{% comment %} <div class="modal fade" id="addMemberModal" tabindex="-1" role="dialog" aria-labelledby="addMemberModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addMemberModalLabel">Add New Member</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="post" action="{% url 'add-member' community.id %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="userSelect">Select User</label>
-                        <select class="form-control" id="userSelect" name="user_email" required>
-                            <option value="">-- Select User --</option>
-                            {% for user in all_users %}
-                                {% if user.email not in members and user.email not in banned_users %}
-                                <option value="{{ user.email }}">{{ user.displayName|default:user.email }} ({{ user.email }})</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Add Member</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div> {% endcomment %}
 
 <!-- Add Member Modal -->
 <div class="modal fade" id="addMemberModal" tabindex="-1" role="dialog" aria-labelledby="addMemberModalLabel" aria-hidden="true">
@@ -365,10 +336,9 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">Members ({{ members|length }})</h6>
-                    <a href="{% url 'add-member' community.id %}" class="btn btn-primary btn-sm">
+                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addMemberModal">
                         <i class="fas fa-plus"></i> Add Members
-                    </a>
-
+                    </button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -469,6 +439,7 @@
     </div>
 </div>
 
+
 <!-- Add Member Modal -->
 <div class="modal fade" id="addMemberModal" tabindex="-1" role="dialog" aria-labelledby="addMemberModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -480,8 +451,15 @@
                 </button>
             </div>
             <form method="post" action="{% url 'add-member' community.id %}">
+                {% csrf_token %}
                 <div class="modal-body">
-                    {% csrf_token %}
+                    {% if messages %}
+                    <div class="alert-messages">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     <div class="form-group">
                         <label for="userSelect">Select User</label>
                         <select class="form-control" id="userSelect" name="user_email" required>
@@ -502,4 +480,11 @@
         </div>
     </div>
 </div>
-{% endblock %} {% endcomment %}
+
+<!-- Required JavaScript for Modals -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+{% endblock %}
+ {% endcomment %}

@@ -6,6 +6,7 @@ from django.urls import reverse
 from datetime import datetime
 from django.contrib import messages
 from firebase_admin import firestore
+from django.http import JsonResponse
 
 def is_admin(user):
     return user.is_superuser
@@ -127,86 +128,6 @@ def plant_delete(request, plant_id):
 
 
 # -------------------- USERS --------------------
-# @login_required
-# @user_passes_test(is_admin)
-# def user_list(request):
-#     repo = FirebaseRepository()
-#     users = [{'id': u.id, **u.to_dict()} for u in repo.get_all_users()]
-#     return render(request, 'dashboard/users/list.html', {'users': users})
-
-# @login_required
-# @user_passes_test(is_admin)
-# def user_create(request):
-#     if request.method == 'POST':
-#         repo = FirebaseRepository()
-#         user_data = {
-#             'email': request.POST.get('email'),
-#             'name': request.POST.get('name'),
-#             'role': request.POST.get('role', 'user'),
-#             'status': request.POST.get('status', 'active'),
-#             'createdAt': datetime.now().isoformat()  # optional: store creation time
-#         }
-#         repo.add_user(user_data)
-#         return redirect('user-list')
-
-
-#     return render(request, 'dashboard/users/form.html')
-
-# @login_required
-# @user_passes_test(is_admin)
-# def user_update(request, user_email):
-#     repo = FirebaseRepository()
-#     user = repo.get_user(user_email)
-#     if not user.exists:
-#         return redirect('user-list')
-
-#     if request.method == 'POST':
-#         user_data = {
-#             'email': request.POST.get('email'),
-#             'name': request.POST.get('name'),
-#             'role': request.POST.get('role'),
-#             'status': request.POST.get('status'),
-#         }
-#         repo.update_user(user_email, user_data)  # Assuming a method to update user in Firebase
-#         return redirect('user-list')
-
-#     return render(request, 'dashboard/users/form.html', {
-#         'title': 'Edit User', 'user': {'id': user.id, **user.to_dict()}
-#     })
-    
-# @login_required
-# @user_passes_test(is_admin)
-# def user_delete(request, user_email):
-#     repo = FirebaseRepository()
-#     user = repo.get_user(user_email)
-#     if not user.exists:
-#         return redirect('user-list')
-
-#     if request.method == 'POST':
-#         repo.delete_user(user_email)
-#         return redirect('user-list')
-
-#     return render(request, 'dashboard/users/delete.html', {
-#         'user': {'id': user.id, **user.to_dict()}
-#     }
-#     # return render(request, 'dashboard/users/delete.html', {'user_id': user.id})
-#     )              
-
-# @login_required
-# @user_passes_test(is_admin)
-# def user_block(request, user_email):
-#     repo = FirebaseRepository()
-#     user = repo.get_user(user_email)
-#     if not user.exists:
-#         return redirect('user-list')
-
-#     if request.method == 'POST':
-#         repo.block_user(user_email)  # Assuming a method to block user in Firebase
-#         return redirect('user-list')
-
-#     return render(request, 'dashboard/users/block.html', {
-#         'user': {'id': user.id, **user.to_dict()}
-#     })
 
 @login_required
 @user_passes_test(is_admin)
@@ -390,16 +311,83 @@ def community_create(request):
         'default_email': request.user.email if request.user.is_authenticated else ''
     })
 
+# @login_required
+# @user_passes_test(is_admin)
+# def block_community(request, community_id):
+#     if request.method == 'POST':
+#         repo = FirebaseRepository()
+#         try:
+#             repo.block_community(community_id, request.user.email)
+#             messages.success(request, "Community has been blocked successfully")
+#         except Exception as e:
+#             messages.error(request, f"Error blocking community: {str(e)}")
+#     return redirect('community-list')
+
+# @login_required
+# @user_passes_test(is_admin)
+# def unblock_community(request, community_id):
+#     if request.method == 'POST':
+#         repo = FirebaseRepository()
+#         try:
+#             repo.db.collection('Communities').document(community_id).update({
+#                 'status': 'active',
+#                 'unblockedAt': datetime.now().isoformat(),
+#                 'unblockedBy': request.user.email
+#             })
+#             messages.success(request, "Community has been unblocked successfully")
+#         except Exception as e:
+#             messages.error(request, f"Error unblocking community: {str(e)}")
+#     return redirect('community-list')
+
 @login_required
 @user_passes_test(is_admin)
 def block_community(request, community_id):
     if request.method == 'POST':
         repo = FirebaseRepository()
         try:
-            repo.block_community(community_id, request.user.email)
+            # First verify the community exists
+            community_ref = repo.db.collection('Communities').document(community_id)
+            community = community_ref.get()
+            
+            if not community.exists:
+                messages.error(request, "Community not found")
+                return redirect('community-list')
+            
+            current_status = community.to_dict().get('status', 'active')
+            
+            if current_status == 'blocked':
+                messages.warning(request, "Community is already blocked")
+                return redirect('community-list')
+            
+            # Update community status and add block info
+            update_data = {
+                'status': 'blocked',
+                'blockedAt': datetime.now().isoformat(),
+                'blockedBy': request.user.email,
+                'previousStatus': current_status  # Store previous status for restoration
+            }
+            
+            # Add to blocked communities subcollection for tracking
+            repo.db.collection('Communities').document(community_id)\
+                .collection('blocked_history').document().set({
+                    'action': 'blocked',
+                    'by': request.user.email,
+                    'at': datetime.now().isoformat(),
+                    'reason': request.POST.get('reason', 'No reason provided')
+                })
+            
+            community_ref.update(update_data)
+            
+            # Optional: Notify community members
+            # notify_community_members(community_id, 'blocked')
+            
             messages.success(request, "Community has been blocked successfully")
+            
         except Exception as e:
             messages.error(request, f"Error blocking community: {str(e)}")
+            # Log the full error for debugging
+            print(f"Error blocking community {community_id}: {str(e)}")
+    
     return redirect('community-list')
 
 @login_required
@@ -408,15 +396,53 @@ def unblock_community(request, community_id):
     if request.method == 'POST':
         repo = FirebaseRepository()
         try:
-            repo.db.collection('Communities').document(community_id).update({
-                'status': 'active',
+            # Verify community exists
+            community_ref = repo.db.collection('Communities').document(community_id)
+            community = community_ref.get()
+            
+            if not community.exists:
+                messages.error(request, "Community not found")
+                return redirect('community-list')
+            
+            current_status = community.to_dict().get('status', 'active')
+            
+            if current_status != 'blocked':
+                messages.warning(request, "Community is not blocked")
+                return redirect('community-list')
+            
+            # Restore previous status or default to 'active'
+            previous_status = community.to_dict().get('previousStatus', 'active')
+            
+            update_data = {
+                'status': previous_status,
                 'unblockedAt': datetime.now().isoformat(),
                 'unblockedBy': request.user.email
-            })
-            messages.success(request, "Community has been unblocked successfully")
+            }
+            
+            # Add to unblock history
+            repo.db.collection('Communities').document(community_id)\
+                .collection('unblocked_history').document().set({
+                    'action': 'unblocked',
+                    'by': request.user.email,
+                    'at': datetime.now().isoformat(),
+                    'restoredStatus': previous_status
+                })
+            
+            community_ref.update(update_data)
+            
+            # Optional: Notify community members
+            # notify_community_members(community_id, 'unblocked')
+            
+            messages.success(request, f"Community has been unblocked and restored to {previous_status} status")
+            
         except Exception as e:
             messages.error(request, f"Error unblocking community: {str(e)}")
+            # Log the full error for debugging
+            print(f"Error unblocking community {community_id}: {str(e)}")
+    
     return redirect('community-list')
+
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -559,26 +585,6 @@ def community_detail(request, community_id):
         'title': f'Community: {community_data.get("name", "")}'
     })
 
-# @login_required
-# @user_passes_test(is_admin)
-# def add_member(request, community_id):
-#     if request.method == 'POST':
-#         repo = FirebaseRepository()
-#         user_email = request.POST.get('user_email')
-        
-#         try:
-#             repo.join_community(user_email, community_id)
-#             messages.success(request, f"User {user_email} added to community successfully")
-#         except Exception as e:
-#             messages.error(request, f"Error adding member: {str(e)}")
-        
-#         # Redirect back to the same form after submission (to add more users)
-#         return redirect('add-member', community_id=community_id)
-
-#     # If GET request, show the form
-#     print("DEBUG - community_id:", community_id) 
-#     return render(request, 'dashboard/communities/addmembers.html', {'community_id': community_id})
-
 @login_required
 @user_passes_test(is_admin)
 def add_member(request, community_id):
@@ -683,7 +689,86 @@ def remove_member(request, community_id):
         
     return redirect('community-detail', community_id=community_id)
 
+@login_required
+def send_community_message(request, community_id):
+    if request.method == 'POST':
+        repo = FirebaseRepository()
+        try:
+            # Verify the community exists
+            community_ref = repo.db.collection('Communities').document(community_id)
+            if not community_ref.get().exists:
+                return JsonResponse({'status': 'error', 'message': 'Community not found'}, status=404)
+            
+            # Create message with user and community info
+            message_data = {
+                'text': request.POST.get('text'),
+                'sender_id': request.user.email,
+                'sender_name': request.user.get_full_name(),
+                'sender_avatar': request.user.profile_image_url,
+                'community_id': community_id,  
+                'createdAt': datetime.now().isoformat(),
+                'reply_to': request.POST.get('reply_to', None),
+                
+            }
+            
+            # Add to SPECIFIC community's Messages subcollection
+            community_ref.collection('Messages').add(message_data)
+            
+            return JsonResponse({'status': 'success'})
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+@login_required
+def get_community_messages(request, community_id):
+    repo = FirebaseRepository()
+    try:
+        messages = []
+        messages_ref = repo.db.collection('Communities').document(community_id)\
+            .collection('Messages')\
+            .order_by('createdAt', direction=firestore.Query.DESCENDING)\
+            .limit(50)\
+            .stream()
+            
+        for msg in messages_ref:
+            msg_data = msg.to_dict()
+            msg_data['id'] = msg.id
+            messages.append(msg_data)
+        
+        return JsonResponse({'status': 'success', 'messages': messages})
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+# @login_required
+# @user_passes_test(is_admin)
+# def send_community_message(request, community_id):
+#     if request.method == 'POST':
+#         repo = FirebaseRepository()
+#         try:
+#             message_data = {
+#                 'text': request.POST.get('text'),
+#                 'sender_id': request.user.email,
+#                 'sender_name': request.user.get_full_name(),
+#                 'sender_avatar': request.user.profile_image_url,  # Adjust based on your user model
+#                 'timestamp': datetime.now().isoformat(),
+#                 'reply_to': request.POST.get('reply_to', None),
+                
+#             }
+            
+#             # Add new message document with auto-generated ID
+#             repo.db.collection('Communities').document(community_id)\
+#                 .collection('Messages').add(message_data)
+                
+#             return JsonResponse({'status': 'success'})
+            
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
 # -------------------- USER PLANTS --------------------
